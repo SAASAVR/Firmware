@@ -1,0 +1,1 @@
+//File intended for sensor integration with server firmware
