@@ -1,7 +1,8 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
-from Testing.testvalues import TestValues
-from Services.serialService import SerialService
+from Testing.test_values import TestValues
+from Services.serial_service import SerialService
+from Services.processing_service import ProcessingService
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -23,7 +24,9 @@ def value_changed(message):
 
 
 if __name__ == '__main__':
-    SerialService.retrieveData()
+    returnedSamples = SerialService.RetrieveDataTest(115200, 128)
+
+    #ProcessingService.ProcessAudio(returnedSamples)
 
     #print(values)
     
