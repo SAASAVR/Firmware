@@ -10,31 +10,37 @@ socketio = SocketIO(app)
 
 values = TestValues(20000).getVals()
 
-# @app.route('/')
-# def index():
-#     return render_template('Webhook\index.html',**values)
+@app.route('/')
+def index():
+    return render_template('index.html',**values)
 
 @socketio.on('connect')
 def test_connect():
-    emit('after connect', {'data':values})
+    print('Client connected')
+    
+@socketio.on('disconnect')
+def test_disconnect():
+    print('Client disconnected')
 
 @socketio.on('Slider value changed')
 def value_changed(message):
     values[message['who']] = message['data']
     emit('update value', message, broadcast=True)
 
-
-if __name__ == '__main__':
+def RunService():
     try:
-        serialService = SerialService("/dev/ttyACM0", 115200)
+        serialService = SerialService("/dev/ttyACM0", 115200, socketio)
     except:
-         serialService = SerialService("/dev/ttyACM1", 115200)
+         serialService = SerialService("/dev/ttyACM1", 115200, socketio)
 
-    returnedSamples = serialService.RetrieveData()
+    serialService.RetrieveData()
     serialService.ser.close()
 
-    #ProcessingService.ProcessAudio(returnedSamples)
+def TestService():
+    while True:
+        socketio.emit('TEST', "TESTING DATA!", namespace='/test')
 
-    #print(values)
-    
-    #socketio.run(app, host='0.0.0.0')
+if __name__ == '__main__':
+    t = threading.Thread(target=TestService)
+    t.start()
+    socketio.run(app, host='192.168.1.250')

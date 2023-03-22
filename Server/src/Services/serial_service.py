@@ -4,13 +4,16 @@ from Services.processing_service import ProcessingService
 import threading
 from datetime import datetime
 import matplotlib.pyplot as plt
+from flask_socketio import SocketIO, emit
 
 class SerialService:
 
-    def __init__(self, port, baudRate):
+
+    def __init__(self, port, baudRate, socket):
         self.port = port
         self.baudRate = baudRate
         self.ser = serial.Serial(port = port, baudrate = baudRate, timeout=0)
+        self.socket = socket
 
 
     def RetrieveData(self):
@@ -44,7 +47,8 @@ class SerialService:
             sampleEnd = datetime.now()
             print(outputSamples)
             freqVals, intensityVals = ProcessingService.ProcessAudio(outputSamples, sampleEnd-sampleStart)
-
+            data = {'freqVals': freqVals, 'intensityVals': intensityVals}
+            self.socket.emit('data', data, namespace='/data')
             #print(freqVals)
             #print(intensityVals)
             line1.set_xdata(freqVals[0:len(freqVals)])
