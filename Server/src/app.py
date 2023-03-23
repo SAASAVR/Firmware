@@ -5,6 +5,7 @@ from Services.serial_service import SerialService
 from Services.processing_service import ProcessingService
 import threading
 
+outputSamples = []
 app = Flask(__name__)
 socketio = SocketIO(app)
 
@@ -22,7 +23,7 @@ def test_connect():
 def test_disconnect():
     print('Client disconnected')
 
-@socketio.on('Slider value changed')
+@socketio.on('test')
 def value_changed(message):
     values[message['who']] = message['data']
     emit('update value', message, broadcast=True)
@@ -33,14 +34,18 @@ def RunService():
     except:
          serialService = SerialService("/dev/ttyACM1", 115200, socketio)
 
-    serialService.RetrieveData()
+    outputSamples = serialService.RetrieveData()
+    #freqVals, intensityVals = ProcessingService.ProcessAudio(outputSamples)
     serialService.ser.close()
 
 def TestService():
+    print("Testing service")
     while True:
-        socketio.emit('TEST', "TESTING DATA!", namespace='/test')
+        socketio.emit('test', "TESTING DATA!", namespace='/test')
 
 if __name__ == '__main__':
+
     t = threading.Thread(target=TestService)
     t.start()
-    socketio.run(app, host='192.168.1.250')
+    print("Socket starting...")
+    socketio.run(app, host='localhost')

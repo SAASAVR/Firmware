@@ -8,7 +8,7 @@ from functools import reduce
 class ProcessingService:
 
     @staticmethod
-    def ProcessAudio(inputSamples: list, sampleTime: timedelta, samplingFrequency: int = 2048):
+    def ProcessAudio(inputSamples: list, samplingFrequency: int = 2048):
         meanVal = reduce(lambda a, b: a + b, inputSamples)/len(inputSamples)
         transformedSamples = [x - meanVal  for x in inputSamples]
 

@@ -24,29 +24,27 @@ class SerialService:
         line1, = ax.plot(range(0, 800))
         fig.show()
         print("retreiving data in thread...")
+
         while 1: 
-            serialThread = threading.Thread(target=self.RetrieveData) 
             counter = 0
             outputSamples = []
-            sampleStart = datetime.now()
             while counter < 128:
-                val = self.ser.readline().decode().strip()
-                if(len(val) > 1):
+                val = self.ser.readline()
+                if val != b'':
                     try:
-                        if(float(val) > 0):
+                        if(float(val.decode().strip()) > 0):
                             #print(float(val))
                             outputSamples.append(float(val))
                             counter += 1
                     # #serialThread.start()
                     except:
-                        parsedVal = float(val.split(".")[0])
+                        parsedVal = float(val.decode().strip().split(".")[0])
                         if(parsedVal > 0):
                             #print(float(val))
                             outputSamples.append(float(parsedVal))
                             counter += 1
-            sampleEnd = datetime.now()
-            print(outputSamples)
-            freqVals, intensityVals = ProcessingService.ProcessAudio(outputSamples, sampleEnd-sampleStart)
+            return outputSamples
+            
             data = {'freqVals': freqVals, 'intensityVals': intensityVals}
             self.socket.emit('data', data, namespace='/data')
             #print(freqVals)
