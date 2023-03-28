@@ -3,12 +3,13 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO
 from time import sleep
 from Services.serial_service import SerialService
-from threading import Thread, Event, Condition
+from threading import Thread, Event, Condition, current_thread
 import time
 from gevent import monkey
 from queue import Queue
 monkey.patch_all()
-
+FILE_ARRAY = []
+ARRAY_INDEX = 0 
 RECORD = False
 CONDITION = Condition()
 DATAQUEUE = Queue()
@@ -28,67 +29,23 @@ class CountThread(Thread):
         """
         Get data and emit to socket
         """
-        outputSamples = []
-        counter = 0
-        while counter < 1024:
-            val = SERIAL.readline().strip()
-            print(val)
-            if val is not b'':
-                #print(val)
-                try:
-                    parsedVal = float(val.decode().strip())
-                    if(parsedVal > 0):
-                        #print(float(val.decode()))
-                        #print(float(val))
-                        if(parsedVal > 0):
-                            if(parsedVal > 700) or (parsedVal < 100):
-                                print("Corrected from...", parsedVal)
-                                if(counter != 0):
-                                    parsedVal = outputSamples[counter-1]
-                                else:
-                                    parsedVal = 240
-                        #print(float(val))
-                            outputSamples.append(float(parsedVal))
-                            counter += 1
-
-                # serialThread.start()
-                except:
-                    parsedVal = float(val.decode().strip().split(".")[0])
-                    if(parsedVal > 0):
-                        if(parsedVal > 700) or (parsedVal < 100):
-                            print("Corrected from...", parsedVal)
-                            if(counter != 0):
-                                parsedVal = outputSamples[counter-1]
-                            else:
-                                parsedVal = 240
-                        
-                    #print(float(val))
-                        outputSamples.append(float(parsedVal))
-                        counter += 1
-        with CONDITION:
-            DATAQUEUE.put(outputSamples.copy())
-            CONDITION.notifyAll()
-        # outputSamples.clear()
-        # print("Added to queue...")
-        # print("Queue size: ", DATAQUEUE.qsize())
-
-
-        
-
- 
-            
-    def run(self):
-        """Default run method"""
+        global FILE_ARRAY
         global RECORD
+        global CONDITION
         while True:
             if not RECORD:
                 with CONDITION:
-                    print("Recording stopped IN THREAD")
                     CONDITION.notifyAll()
                     return
             else:
-                print("Recording started IN THREAD")
-                self.get_data()
+                val = SERIAL.readline()
+                with CONDITION:
+                    FILE_ARRAY.append(val)
+                    if(len(FILE_ARRAY) % 128 == 0):
+                        CONDITION.notifyAll()
+    def run(self):
+        """Default run method"""
+        self.get_data()
 
     def stop(self):
         """Stop thread"""
@@ -140,31 +97,48 @@ def startRecord(incoming):
 def getData(incoming):
     """Get data from queue"""
     print("Getting data from queue")
+    tempArray = []
     global DATAQUEUE
+    global ARRAY_INDEX
+    global FILE_ARRAY
     global CONDITION
     with CONDITION:
         print("aaaaa")
-        while DATAQUEUE.qsize() == 0:
+        while len(FILE_ARRAY) == 0:
             print("Waiting for data...1")
             CONDITION.wait()
-        while DATAQUEUE.qsize() > 0:
-            print("Sending data...")
-            SOCKETIO.emit("sendData", {"test":DATAQUEUE.get()}, namespace='/flask-socketio-demo')
-            print("Data sent")
-            if DATAQUEUE.qsize() == 0:
-                print("Waiting for data...2")
+        while (ARRAY_INDEX <= len(FILE_ARRAY)-128):
+            if len(FILE_ARRAY) % 128 == 0:
+                print("Processing...")
+                tempArray = [x for x in [x.decode().strip().split(".")[0][0:3] for x in FILE_ARRAY if len(x.decode().strip().split(".")[0][0:3]) > 2][128*ARRAY_INDEX:128*(1+ARRAY_INDEX)]]
+            if len(tempArray) < 128:
                 CONDITION.wait()
+            else:
+                print("Temp array: ", tempArray)
+                SOCKETIO.emit("sendData", {"test":tempArray}, namespace='/flask-socketio-demo')
+                ARRAY_INDEX += 1
+                print("Data sent")
 
 #Receive "stopRecording" event from client
 @SOCKETIO.on('stopRecording', namespace='/flask-socketio-demo')
 def stopRecording(incoming):
+    """Stop recording"""
+    print("Stopping recording...")
+    global FILE_ARRAY
+    global ARRAY_INDEX 
+    ARRAY_INDEX = 0
+    #print([x.decode().strip() for x in FILE_ARRAY])
+    #Save list to a file:
+    with open("test.txt", "w") as f:
+            f.write(', '.join([x.decode().strip() for x in FILE_ARRAY]))
+
     print(incoming)
     global RECORD
     global THREAD
     RECORD = False
     THREAD.join()
     print("Recording stopped")
-    print("Thread status: ", THREAD.isAlive())
+
 
 
 if __name__ == '__main__':
