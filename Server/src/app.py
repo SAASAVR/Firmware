@@ -48,7 +48,7 @@ class GetSerial(Process):
             else:
                 val = SERIAL.readline()
                 self.queue.put(val)
-                #sleep(0.00001)
+                sleep(0.00001)
 
     def run(self):
         """Default run method"""
