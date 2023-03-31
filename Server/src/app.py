@@ -1,8 +1,9 @@
 import serial
 from flask import Flask, render_template
-from flask_socketio import SocketIO
+#from flask_socketio import SocketIO
 from time import sleep
 import numpy as np
+import socketio
 from scipy.io.wavfile import write
 from functools import reduce
 from Services.serial_service import SerialService
@@ -11,7 +12,7 @@ import time
 from multiprocessing import Process, Event, Condition, current_process, Manager, Value, Queue
 from gevent import monkey
 #from queue import Queue
-monkey.patch_all()
+#monkey.patch_all()
 FILE_ARRAY = []
 FILE_QUEUE = Queue()
 SAMPLE_RATE = 1500
@@ -19,11 +20,12 @@ ARRAY_INDEX = 0
 RECORD = Value('b', False)
 SEND = False
 CONDITION = Condition()
-APP = Flask(__name__)
-SOCKETIO = SocketIO(APP)
+#APP = Flask(__name__)
+#SOCKETIOSERVER = SocketIO(APP)
+SOCKETIO = socketio.Client()
 # THREAD = Thread()
 PROCESS = Process()
-SERIAL = serial.Serial(port = "/dev/ttyACM0", baudrate = 115200, timeout=0)
+SERIAL = serial.Serial(port = "/dev/ttyACM0", baudrate = 921600, timeout=0)
 
 class GetSerial(Process):
     """Stream data on thread"""
@@ -38,52 +40,51 @@ class GetSerial(Process):
         """
         Get data and emit to socket
         """
-        global RECORD
+        print("Recording....")
         while True:
-            print("Current ProcessID: ", current_process().pid)
-            print("Record status: ", self.record.value)
             if not self.record.value:
                 print("Stopping recording1")
                 return
             else:
-                print("Recording....")
                 val = SERIAL.readline()
                 self.queue.put(val)
-                sleep(0.0001)
-
+                #sleep(0.00001)
 
     def run(self):
         """Default run method"""
         self.get_data()
 
 
-@APP.route('/')
-def index():
-    """Index route"""
-    return render_template("test.html")
+# @APP.route('/')
+# def index():
+#     """Index route"""
+#     return render_template("test.html")
 
-@SOCKETIO.on('connect', namespace='/flask-socketio-demo')
-def connect_socket():
-    """Handle socket connection"""
-    print("Client connected")
+# @SOCKETIO.on('connect')
+# def connect_socket(self):
+#     """Handle socket connection"""
+#     print("Client connected: ")
 
-
-@SOCKETIO.on('disconnect', namespace='/flask-socketio-demo')
+@SOCKETIO.on('disconnect')
 def disconnect_socket():
     """Handle socket disconnection"""
     print("Client disconnected")
     global RECORD
     global PROCESS
     RECORD.value = False
-    PROCESS.join()
+    if(PROCESS.is_alive()):
+        PROCESS.join()
     print("Recording stopped")
     #print("Thread status: ", THREAD.isAlive())
 
+
 #Receive "startRecording" event from client
-@SOCKETIO.on('startRecording', namespace='/flask-socketio-demo')
+@SOCKETIO.on('UI-record-request')
 def startRecord(incoming):
+    global SAMPLE_RATE
     """Start recording"""
     print(incoming)
+    SOCKETIO.emit("SAAS-recording", {"samplerate":SAMPLE_RATE})
     global RECORD
     global PROCESS
     RECORD.value = True
@@ -94,8 +95,8 @@ def startRecord(incoming):
     PROCESS = GetSerial(FILE_QUEUE, RECORD)
     PROCESS.start()
 
-@SOCKETIO.on('getData', namespace='/flask-socketio-demo')
-def getData(incoming):
+@SOCKETIO.on("UI-ready-for-data")
+def getData():
     """Get data from queue"""
     print("Getting data from queue")
     tempArray = []
@@ -111,43 +112,23 @@ def getData(incoming):
         if len(val) == 3:
             tempArray.append(val)
             FILE_ARRAY.append(val)
+        else:
+            print("Invalid data: ", val)
         if len(tempArray) == 128:
-            SOCKETIO.emit("sendData", {"test":tempArray}, namespace='/flask-socketio-demo')
-            print("Data sent: ", tempArray)
+            SOCKETIO.emit("SAAS-send-data", {"vals":tempArray})
+            #print("Data sent: ", tempArray)
             tempArray = []
         timeoutStart = time.time()
         while FILE_QUEUE.empty() and SEND:
             sleep(0.01)
             timeoutEnd = time.time()
-            print("Waiting for data...2", timeoutEnd)
+            #print("Waiting for data...2", timeoutEnd)
             if timeoutEnd - timeoutStart > 5:
-                return 
+                break 
             
-
-
-    # print("aaaaa")
-    # while len(FILE_ARRAY) == 0:
-    #     print("Waiting for data...1")
-    # while (SEND):
-    #     sleep(0.01)
-    #     #print("Checking length of array...")
-    #     print("Length of array: ", len(FILE_ARRAY))
-    #     if len(FILE_ARRAY) > 128:
-    #         print("Processing...")
-    #         tempArray = [x for x in [x.decode().strip().split(".")[0][0:3] for x in FILE_ARRAY if len(x.decode().strip().split(".")[0][0:3]) > 2][128*ARRAY_INDEX:128*(1+ARRAY_INDEX)]]
-    #     if len(tempArray) >= 128:
-    #         SOCKETIO.emit("sendData", {"test":tempArray}, namespace='/flask-socketio-demo')
-    #         ARRAY_INDEX += 1
-    #         print("Data sent: ", ARRAY_INDEX)
-    #     else:
-    #         while(ARRAY_INDEX*128 <= len(FILE_ARRAY)-128):
-    #             print("Waiting for data...2")
-    #             sleep(0.1)
-        
-
 #Receive "stopRecording" event from client
-@SOCKETIO.on('stopRecording', namespace='/flask-socketio-demo')
-def stopRecording(incoming):
+@SOCKETIO.on('UI-stop-request')
+def stopRecording():
     """Stop recording"""
     print("Stopping recording...")
     global FILE_ARRAY
@@ -155,34 +136,54 @@ def stopRecording(incoming):
     global SEND
     ARRAY_INDEX = 0
     SEND = False
-    print(incoming)
     global RECORD
     global PROCESS
     RECORD.value = False
     print("PID of child process: ", PROCESS.pid)
-    
-    PROCESS.join()
+
+    if(PROCESS.is_alive()):
+        PROCESS.join()
     print("Recording stopped")
+    SOCKETIO.emit("SAAS-stopping-recording",)
 
     #Save list to a file:
     print("Encoding file...")
-    # saveWav = np.array([x for x in [x.decode().strip().split(".")[0][0:3] for x in FILE_ARRAY if len(x.decode().strip().split(".")[0][0:3]) > 2]])
-    # meanVal = reduce(lambda a, b: a + b, saveWav)/len(saveWav)
-    # transformedSamples = [x - meanVal for x in saveWav]
-    # waveform_scaled = np.int16(
-    # transformedSamples/np.max(np.abs(transformedSamples)) * 32767)
-    # print("Writing file...")
-    # write('test.wav', SAMPLE_RATE, waveform_scaled)
     with open("test.txt", "w") as f:
         f.write(", ".join(FILE_ARRAY))
+    saveFile([int(x) for x in FILE_ARRAY], SAMPLE_RATE)
+    print("File saved")
+    
 
 
     
 
+def saveFile(audioWaveform,sps):
+    meanVal = sum(audioWaveform)/len(audioWaveform)
+    transformedSamples = [x - meanVal for x in audioWaveform]
 
+    npArray = np.array(audioWaveform)
+
+    print("Max value in npArraY: " + str(npArray.max()))
+    # Removing outliers greater than 300 and less than 200 from npArray
+    npArray = npArray[npArray < 600]
+    npArray = npArray[npArray > 200]
+    print(len(npArray))
+    # Scale waveform to 16-bit range
+    waveform_scaled = np.int16(
+        transformedSamples/np.max(np.abs(transformedSamples)) * 32767)
+
+    # Play the waveform out the speakers
+    print("Saving WAV file...")
+    write('test.wav', sps, waveform_scaled)
 
 if __name__ == '__main__':
     print("Connecting...")
-    SOCKETIO.run(APP, host='192.168.1.250')
+    SOCKETIO.connect('http://192.168.1.93:5000')
+    print("Connected...")
+    SOCKETIO.emit("SAAS-connect")
+    time.sleep(1)
+    print("Sending ready...")
+    SOCKETIO.emit("SAAS-ready")
+    #SOCKETIO.run(APP, host='192.168.1.250')
 
     
