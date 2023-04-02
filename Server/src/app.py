@@ -11,8 +11,21 @@ from Services.serial_service import SerialService
 import time
 from multiprocessing import Process, Event, Condition, current_process, Manager, Value, Queue
 from gevent import monkey
+import io
+import librosa
+import librosa.display
+import pymongo
+from PIL import Image
+import base64
 #from queue import Queue
 #monkey.patch_all()
+
+with open('mongodbKey', 'r') as file:
+    MONGO_URL = file.read()
+dbClient = pymongo.MongoClient(MONGO_URL)
+DATABASE_NAME = "mydatabase"
+COLLECTION_NAME = "AudiosTest"
+
 FILE_ARRAY = []
 FILE_QUEUE = Queue()
 SAMPLE_RATE = 1500
@@ -155,6 +168,15 @@ def stopRecording():
     
 
 
+@SOCKETIO.on("UI-connect")
+def UIConnected(data):
+    """event listener for when the UI connects"""
+    print("UI has connected")
+    SOCKETIO.emit("SAAS-connect")
+    time.sleep(1)
+    print("Sending ready...")
+    print(data)
+    SOCKETIO.emit("SAAS-ready")
     
 
 def saveFile(audioWaveform,sps):
@@ -175,6 +197,9 @@ def saveFile(audioWaveform,sps):
     # Play the waveform out the speakers
     print("Saving WAV file...")
     write('test.wav', sps, waveform_scaled)
+
+
+
 
 if __name__ == '__main__':
     print("Connecting...")
