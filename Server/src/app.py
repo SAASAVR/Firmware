@@ -4,6 +4,7 @@ from flask import Flask, render_template
 from time import sleep
 import numpy as np
 import socketio
+from datetime import datetime
 from scipy.io.wavfile import write
 from functools import reduce
 from Services.serial_service import SerialService
@@ -178,36 +179,34 @@ def UIConnected(data):
     print(data)
     SOCKETIO.emit("SAAS-ready")
     
+def generateID():
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    print(timestamp)
+    return timestamp
+
 
 def insertAudio(id, wavfile):
-    mycol = dbClient[DATABASE_NAME][COLLECTION_NAME]
-
-    
+    mycol = dbClient[DATABASE_NAME][COLLECTION_NAME]  
     f = open(wavfile, "rb")
     y= f.read()
     myInsert = { "ID": id, "fileBytes" : y}
 
     mycol.insert_one(myInsert)
 
+
+
 def saveFile(audioWaveform,sps):
     meanVal = sum(audioWaveform)/len(audioWaveform)
     transformedSamples = [x - meanVal for x in audioWaveform]
-
     npArray = np.array(audioWaveform)
-
-    print("Max value in npArraY: " + str(npArray.max()))
-    # Removing outliers greater than 300 and less than 200 from npArray
-    npArray = npArray[npArray < 600]
-    npArray = npArray[npArray > 200]
-    print(len(npArray))
     # Scale waveform to 16-bit range
     waveform_scaled = np.int16(
         transformedSamples/np.max(np.abs(transformedSamples)) * 32767)
-
-    # Play the waveform out the speakers
+    id = generateID()
+    # Save as WAV file using timestamp as filename
     print("Saving WAV file...")
-    write('test.wav', sps, waveform_scaled)
-    insertAudio('test', 'test.wav')
+    write(id, sps, waveform_scaled)
+    insertAudio(id, 'test.wav')
 
 
 
@@ -221,6 +220,6 @@ if __name__ == '__main__':
     print("Sending ready...")
     SOCKETIO.emit("SAAS-ready")
     #SOCKETIO.run(APP, host='192.168.1.250')
-    
+
 
     
