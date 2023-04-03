@@ -165,7 +165,7 @@ def stopRecording():
         f.write(", ".join(FILE_ARRAY))
     saveFile([int(x) for x in FILE_ARRAY], SAMPLE_RATE)
     print("File saved")
-    
+
 
 
 @SOCKETIO.on("UI-connect")
@@ -178,6 +178,16 @@ def UIConnected(data):
     print(data)
     SOCKETIO.emit("SAAS-ready")
     
+
+def insertAudio(id, wavfile):
+    mycol = dbClient[DATABASE_NAME][COLLECTION_NAME]
+
+    
+    f = open(wavfile, "rb")
+    y= f.read()
+    myInsert = { "ID": id, "fileBytes" : y}
+
+    mycol.insert_one(myInsert)
 
 def saveFile(audioWaveform,sps):
     meanVal = sum(audioWaveform)/len(audioWaveform)
@@ -197,6 +207,7 @@ def saveFile(audioWaveform,sps):
     # Play the waveform out the speakers
     print("Saving WAV file...")
     write('test.wav', sps, waveform_scaled)
+    insertAudio('test', 'test.wav')
 
 
 
@@ -210,5 +221,6 @@ if __name__ == '__main__':
     print("Sending ready...")
     SOCKETIO.emit("SAAS-ready")
     #SOCKETIO.run(APP, host='192.168.1.250')
+    
 
     
