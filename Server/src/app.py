@@ -203,10 +203,11 @@ def saveFile(audioWaveform,sps):
     waveform_scaled = np.int16(
         transformedSamples/np.max(np.abs(transformedSamples)) * 32767)
     id = generateID()
+    filename = id + ".wav"
     # Save as WAV file using timestamp as filename
     print("Saving WAV file...")
-    write(id, sps, waveform_scaled)
-    insertAudio(id, 'test.wav')
+    write(filename, sps, waveform_scaled)
+    insertAudio(id, filename)
 
 
 
