@@ -14,7 +14,7 @@ with open('mongodbKey', 'r') as file:
 dbClient = pymongo.MongoClient(MONGO_URL)
 DATABASE_NAME = "mydatabase"
 COLLECTION_NAME = "AudiosTest"
-
+  
 FILE_ARRAY = []
 FILE_QUEUE = Queue()
 SAMPLE_RATE = 1500
@@ -78,7 +78,7 @@ def disconnect_socket():
     print("Recording stopped")
     #print("Thread status: ", THREAD.isAlive())
 
-#Receive "startRecording" event from client
+# Notification from server that recording can begin
 @SOCKETIO.on('UI-record-request')
 def startRecord(incoming):
     global SAMPLE_RATE
@@ -95,6 +95,7 @@ def startRecord(incoming):
     PROCESS = GetSerial(FILE_QUEUE, RECORD)
     PROCESS.start()
 
+# Notification from UI that data is ready to be sent
 @SOCKETIO.on("UI-ready-for-data")
 def getData():
     """Get data from queue"""
@@ -126,7 +127,7 @@ def getData():
             if timeoutEnd - timeoutStart > 5:
                 break 
             
-#Receive "stopRecording" event from client
+# Notification to stop recording
 @SOCKETIO.on('UI-stop-request')
 def stopRecording():
     """Stop recording"""
@@ -153,6 +154,7 @@ def stopRecording():
     saveFile([int(x) for x in FILE_ARRAY], SAMPLE_RATE)
     print("File saved")
 
+# Executes when server has connected to the UI
 @SOCKETIO.on("UI-connect")
 def UIConnected(data):
     """event listener for when the UI connects"""
