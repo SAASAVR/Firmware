@@ -1,26 +1,14 @@
 import serial
-from flask import Flask, render_template
-#from flask_socketio import SocketIO
 from time import sleep
 import numpy as np
 import socketio
 from datetime import datetime
 from scipy.io.wavfile import write
-from functools import reduce
-from Services.serial_service import SerialService
-#from threading import Thread, Event, Condition, current_thread
 import time
 from multiprocessing import Process, Event, Condition, current_process, Manager, Value, Queue
-from gevent import monkey
-import io
-import librosa
-import librosa.display
 import pymongo
-from PIL import Image
-import base64
-#from queue import Queue
-#monkey.patch_all()
 
+# Connect to MongoDB using connection string from "mongodbKey" file
 with open('mongodbKey', 'r') as file:
     MONGO_URL = file.read()
 dbClient = pymongo.MongoClient(MONGO_URL)
@@ -34,10 +22,7 @@ ARRAY_INDEX = 0
 RECORD = Value('b', False)
 SEND = False
 CONDITION = Condition()
-#APP = Flask(__name__)
-#SOCKETIOSERVER = SocketIO(APP)
 SOCKETIO = socketio.Client()
-# THREAD = Thread()
 PROCESS = Process()
 SERIAL = serial.Serial(port = "/dev/ttyACM0", baudrate = 921600, timeout=0)
 
@@ -48,7 +33,6 @@ class GetSerial(Process):
         super(GetSerial, self).__init__()
         self.queue = queue
         self.record = record
-
 
     def get_data(self):
         """
@@ -68,17 +52,20 @@ class GetSerial(Process):
         """Default run method"""
         self.get_data()
 
+def generateID():
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    print(timestamp)
+    return timestamp
 
-# @APP.route('/')
-# def index():
-#     """Index route"""
-#     return render_template("test.html")
+def insertAudio(id, wavfile):
+    mycol = dbClient[DATABASE_NAME][COLLECTION_NAME]  
+    f = open(wavfile, "rb")
+    y= f.read()
+    myInsert = { "ID": id, "fileBytes" : y}
 
-# @SOCKETIO.on('connect')
-# def connect_socket(self):
-#     """Handle socket connection"""
-#     print("Client connected: ")
+    mycol.insert_one(myInsert)
 
+def saveFile(audioWaveform,sps):
 @SOCKETIO.on('disconnect')
 def disconnect_socket():
     """Handle socket disconnection"""
@@ -90,7 +77,6 @@ def disconnect_socket():
         PROCESS.join()
     print("Recording stopped")
     #print("Thread status: ", THREAD.isAlive())
-
 
 #Receive "startRecording" event from client
 @SOCKETIO.on('UI-record-request')
@@ -167,8 +153,6 @@ def stopRecording():
     saveFile([int(x) for x in FILE_ARRAY], SAMPLE_RATE)
     print("File saved")
 
-
-
 @SOCKETIO.on("UI-connect")
 def UIConnected(data):
     """event listener for when the UI connects"""
@@ -179,23 +163,7 @@ def UIConnected(data):
     print(data)
     SOCKETIO.emit("SAAS-ready")
     
-def generateID():
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    print(timestamp)
-    return timestamp
 
-
-def insertAudio(id, wavfile):
-    mycol = dbClient[DATABASE_NAME][COLLECTION_NAME]  
-    f = open(wavfile, "rb")
-    y= f.read()
-    myInsert = { "ID": id, "fileBytes" : y}
-
-    mycol.insert_one(myInsert)
-
-
-
-def saveFile(audioWaveform,sps):
     meanVal = sum(audioWaveform)/len(audioWaveform)
     transformedSamples = [x - meanVal for x in audioWaveform]
     npArray = np.array(audioWaveform)
@@ -208,9 +176,6 @@ def saveFile(audioWaveform,sps):
     print("Saving WAV file...")
     write(filename, sps, waveform_scaled)
     insertAudio(id, filename)
-
-
-
 
 if __name__ == '__main__':
     print("Connecting...")
