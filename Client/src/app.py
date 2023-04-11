@@ -7,6 +7,7 @@ from scipy.io.wavfile import write
 import time
 from multiprocessing import Process, Event, Condition, current_process, Manager, Value, Queue
 import pymongo
+import math
 
 # Connect to MongoDB using connection string from "mongodbKey" file
 with open('mongodbKey', 'r') as file:
@@ -117,8 +118,8 @@ def getData():
         else:
             print("Invalid data: ", val)
         if len(tempArray) == 128:
-            sentArray = NormalizeAudio(tempArray)
-            SOCKETIO.emit("SAAS-send-data", {"vals":sentArray})
+            normalizedArray = NormalizeAudio(tempArray)
+            SOCKETIO.emit("SAAS-send-data", {"vals":normalizedArray})
             #print("Data sent: ", tempArray)
             tempArray = []
         timeoutStart = time.time()
@@ -164,7 +165,6 @@ def UIConnected(data):
     SOCKETIO.emit("SAAS-connect")
     time.sleep(1)
     print("Sending ready...")
-    print(data)
     SOCKETIO.emit("SAAS-ready")
     
 def saveFile(audioWaveform,sps):
@@ -186,15 +186,13 @@ def NormalizeAudio(audioWaveform):
     npAudioWaveform = npAudioWaveform.astype(np.float16)
     
     meanVal = sum(npAudioWaveform)/len(npAudioWaveform)
-    print(npAudioWaveform)
     npAudioWaveform = np.clip(npAudioWaveform, 0, 255)
 
     transformedSamples = [x - meanVal for x in npAudioWaveform]
-    print("Mean: ", meanVal)
-    print(npAudioWaveform)
 
     # Clip values between -30 to 30
     return transformedSamples
+
 
 if __name__ == '__main__':
     print("Connecting...")
