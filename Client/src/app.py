@@ -46,7 +46,7 @@ class GetSerial(Process):
             else:
                 val = SERIAL.readline()
                 self.queue.put(val)
-                sleep(0.00001)
+                sleep(0.000005)
 
     def run(self):
         """Default run method"""
@@ -65,7 +65,7 @@ def insertAudio(id, wavfile):
 
     mycol.insert_one(myInsert)
 
-def saveFile(audioWaveform,sps):
+
 @SOCKETIO.on('disconnect')
 def disconnect_socket():
     """Handle socket disconnection"""
@@ -76,6 +76,7 @@ def disconnect_socket():
     if(PROCESS.is_alive()):
         PROCESS.join()
     print("Recording stopped")
+    SOCKETIO.emit("SAAS-disconnect")
     #print("Thread status: ", THREAD.isAlive())
 
 # Notification from server that recording can begin
@@ -116,7 +117,8 @@ def getData():
         else:
             print("Invalid data: ", val)
         if len(tempArray) == 128:
-            SOCKETIO.emit("SAAS-send-data", {"vals":tempArray})
+            sentArray = NormalizeAudio(tempArray)
+            SOCKETIO.emit("SAAS-send-data", {"vals":sentArray})
             #print("Data sent: ", tempArray)
             tempArray = []
         timeoutStart = time.time()
@@ -165,10 +167,8 @@ def UIConnected(data):
     print(data)
     SOCKETIO.emit("SAAS-ready")
     
-
-    meanVal = sum(audioWaveform)/len(audioWaveform)
-    transformedSamples = [x - meanVal for x in audioWaveform]
-    npArray = np.array(audioWaveform)
+def saveFile(audioWaveform,sps):
+    transformedSamples = NormalizeAudio(audioWaveform)
     # Scale waveform to 16-bit range
     waveform_scaled = np.int16(
         transformedSamples/np.max(np.abs(transformedSamples)) * 32767)
@@ -178,10 +178,27 @@ def UIConnected(data):
     print("Saving WAV file...")
     write(filename, sps, waveform_scaled)
     insertAudio(id, filename)
+    print("File saved")
+    SOCKETIO.emit("SAAS-file-saved")
+
+def NormalizeAudio(audioWaveform):
+    npAudioWaveform = np.array(audioWaveform)
+    npAudioWaveform = npAudioWaveform.astype(np.float16)
+    
+    meanVal = sum(npAudioWaveform)/len(npAudioWaveform)
+    print(npAudioWaveform)
+    npAudioWaveform = np.clip(npAudioWaveform, 0, 255)
+
+    transformedSamples = [x - meanVal for x in npAudioWaveform]
+    print("Mean: ", meanVal)
+    print(npAudioWaveform)
+
+    # Clip values between -30 to 30
+    return transformedSamples
 
 if __name__ == '__main__':
     print("Connecting...")
-    SOCKETIO.connect('http://192.168.1.93:5000')
+    SOCKETIO.connect('http://192.168.1.93:5000', wait=True)
     print("Connected...")
     SOCKETIO.emit("SAAS-connect")
     time.sleep(1)
