@@ -7,6 +7,7 @@ from scipy.io.wavfile import write
 import time
 from multiprocessing import Process, Event, Condition, current_process, Manager, Value, Queue
 import pymongo
+import librosa
 import math
 
 # Connect to MongoDB using connection string from "mongodbKey" file
@@ -58,14 +59,44 @@ def generateID():
     print(timestamp)
     return timestamp
 
-def insertAudio(id, wavfile):
-    mycol = dbClient[DATABASE_NAME][COLLECTION_NAME]  
+"""Convert the 'Bytefile to a numpy float"""
+def binaryData2numpy(input):
+    out, sr = librosa.load(io.BytesIO(input), sr=None)
+    return out
+
+
+
+"""changes the numpy array to a mel spectrum image in binary"""
+def generateMelSpecBinaryImage(np_array):
+    # np_array, sr = librosa.load("hoot-46198.mp3", sr=22050)
+    S = librosa.feature.melspectrogram(y=np_array,
+                                  sr=22050,
+                                  n_mels=128 * 2,)
+
+    S_db_mel = librosa.amplitude_to_db(S, ref=np.max)
+    spectrumList = S_db_mel.tolist()
+    fig, ax = plt.subplots(figsize=(10, 5))
+    # Plot the mel spectogram
+    img = librosa.display.specshow(S_db_mel,
+                                x_axis='time',
+                                y_axis='log',
+                                ax=ax)
+    ax.set_title('Mel Spectogram', fontsize=20)
+    fig.colorbar(img, ax=ax, format=f'%0.2f')
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    data = buf.getvalue()
+    buf.close()
+    return data
+"""Initial insert of audio to database, contains ID, the audio data in binary, sampling rate(sr), an image of mel spectrum"""
+def insertAudio(id, wavfile, sr, size = 10000):
+    mycol = dbClient[DATABASE_NAME][COLLECTION_NAME]
     f = open(wavfile, "rb")
     y= f.read()
-    myInsert = { "ID": id, "fileBytes" : y}
-
+    binaryImg = generateMelSpecBinaryImage(binaryData2numpy(y))
+    myInsert = {"ID": id, "fileBytes" : y, "AudioData":{'sr': sr, 'Size':size, 'clipLength': size/sr, 'MelSpectrumImgBytes': binaryImg}, "MLData":{}}
     mycol.insert_one(myInsert)
-
 
 @SOCKETIO.on('disconnect')
 def disconnect_socket():
