@@ -3,11 +3,14 @@ from time import sleep
 import numpy as np
 import socketio
 from datetime import datetime
+import io
+import matplotlib.pyplot as plt
 from scipy.io.wavfile import write
 import time
 from multiprocessing import Process, Event, Condition, current_process, Manager, Value, Queue
 import pymongo
 import math
+import librosa
 
 # Connect to MongoDB using connection string from "mongodbKey" file
 with open('mongodbKey', 'r') as file:
@@ -58,12 +61,41 @@ def generateID():
     print(timestamp)
     return timestamp
 
-def insertAudio(id, wavfile):
-    mycol = dbClient[DATABASE_NAME][COLLECTION_NAME]  
+"""Convert the 'Bytefile to a numpy float"""
+def binaryData2numpy(input):
+    out, sr = librosa.load(io.BytesIO(input), sr=None)
+    return out
+
+"""changes the numpy array to a mel spectrum image in binary"""
+def generateMelSpecBinaryImage(np_array):
+    # np_array, sr = librosa.load("hoot-46198.mp3", sr=22050)
+    S = librosa.feature.melspectrogram(y=np_array,
+                                  sr=22050,
+                                  n_mels=128 * 2,)
+
+    S_db_mel = librosa.amplitude_to_db(S, ref=np.max)
+    spectrumList = S_db_mel.tolist()
+    fig, ax = plt.subplots(figsize=(10, 5))
+    # Plot the mel spectogram
+    img = librosa.display.specshow(S_db_mel,
+                                x_axis='time',
+                                y_axis='log',
+                                ax=ax)
+    ax.set_title('Mel Spectogram', fontsize=20)
+    fig.colorbar(img, ax=ax, format=f'%0.2f')
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    data = buf.getvalue()
+    buf.close()
+    return data
+"""Initial insert of audio to database, contains ID, the audio data in binary, sampling rate(sr), an image of mel spectrum"""
+def insertAudio(id, wavfile, sr, size = 10000):
+    mycol = dbClient[DATABASE_NAME][COLLECTION_NAME]
     f = open(wavfile, "rb")
     y= f.read()
-    myInsert = { "ID": id, "fileBytes" : y}
-
+    binaryImg = generateMelSpecBinaryImage(binaryData2numpy(y))
+    myInsert = {"ID": id, "fileBytes" : y, "AudioData":{'sr': sr, 'Size':size, 'clipLength': size/sr, 'MelSpectrumImgBytes': binaryImg}, "MLData":{}}
     mycol.insert_one(myInsert)
 
 
@@ -168,6 +200,7 @@ def UIConnected(data):
     SOCKETIO.emit("SAAS-ready")
     
 def saveFile(audioWaveform,sps):
+    global FILE_ARRAY
     transformedSamples = NormalizeAudio(audioWaveform)
     # Scale waveform to 16-bit range
     waveform_scaled = np.int16(
@@ -177,8 +210,9 @@ def saveFile(audioWaveform,sps):
     # Save as WAV file using timestamp as filename
     print("Saving WAV file...")
     write(filename, sps, waveform_scaled)
-    insertAudio(id, filename)
+    insertAudio(id, filename, sps)
     print("File saved")
+    FILE_ARRAY = []
     SOCKETIO.emit("SAAS-file-saved")
 
 def NormalizeAudio(audioWaveform):
@@ -188,7 +222,7 @@ def NormalizeAudio(audioWaveform):
     meanVal = sum(npAudioWaveform)/len(npAudioWaveform)
     npAudioWaveform = np.clip(npAudioWaveform, 0, 255)
 
-    transformedSamples = [x - meanVal for x in npAudioWaveform]
+    transformedSamples = [(x - meanVal)/meanVal for x in npAudioWaveform]
 
     # Clip values between -30 to 30
     return transformedSamples
@@ -196,7 +230,7 @@ def NormalizeAudio(audioWaveform):
 
 if __name__ == '__main__':
     print("Connecting...")
-    SOCKETIO.connect('http://192.168.1.93:5000', wait=True)
+    SOCKETIO.connect('http://192.168.186.208:5000', wait=True)
     print("Connected...")
     SOCKETIO.emit("SAAS-connect")
     time.sleep(1)
