@@ -17,7 +17,8 @@ This can overwhelm the user and make the device difficult to configure.
 This is the preferred method of interfacing with the SAAS firmware. Setting up an SSH server on the Lattepanda will allow any other device on the same network to connect to it via this method if it's IP address is known.
 
 ## NETWORK SETUP
-
+### 1. Connect via ethernet
+#### - On a separate Ubuntu device (WLSL2 on Windows 10/11 is compatible), ensure ssh_client is installed
 ## SETUP FOR CONFIGURED DEVICE
 - Arduino sketch is found under ~/Capstone/Firmware/Arduino
 - Open it using the arduino IDE installed on the system.
