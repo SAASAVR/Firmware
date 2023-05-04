@@ -13,6 +13,9 @@ The Lattepanda is currently running Ubuntu Desktop 16.4. There are multiple ways
 This is the easiest way to interface with the SAAS firmware, as it allows for full access to the operating system in a visual manner. 
 Some issues may arise using this method however, as there seems to be a problem with graphical elements creating trails when moving around the screen. 
 This can overwhelm the user and make the device difficult to configure.
+#### Steps:
+1. Connect the Lattepanda to your network. If using Wifi ensure that 
+
 ### 2. Connecting to the LattePanda via SSH
 This is the preferred method of interfacing with the SAAS firmware. Setting up an SSH server on the Lattepanda will allow any other device on the same network to connect to it via this method if it's IP address is known.
 
