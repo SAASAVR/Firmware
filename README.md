@@ -22,17 +22,22 @@ This can make configuration difficult.
 This is the preferred method of interfacing with the SAAS firmware. Setting up an SSH server on the Lattepanda will allow any other device on the same network to connect to it via this method if it's IP address is known.
 
 ## NETWORK SETUP
-### 1. Connect via ethernet
-#### - On a separate Ubuntu system (WLSL2 on Windows 10/11 is compatible. [Refer to installation guide](https://learn.microsoft.com/en-us/windows/wsl/install)), ensure ssh_client is installed
-### 2. Ensure the LattePanda is turned on.
-### 3. On the separate Ubuntu system, enter the following command: ```ssh -X admin@192.168.1.250```
-#### - The ```-X``` allows X forwarding to occur between the connected systems so that GUI applications from the LattePanda can run on the ssh client.
-#### - The ```admin@192.168.1.250``` is referring to the user account being logged into, and the ip address of the device. Note that this IP is static for ethernet connections and non-DHCP wireless connections.
-### 4. Connect the LattePanda to wifi via SSH
-#### - Turn on wi-fi using ```nmcli r wifi on```
-#### - Check that your wireless network of choice is visible to the device using ```nmcli d wifi list```
-#### - Connect to your network of choice using ```nmcli d wifi connect my_wifi password <password>``` 
+1. Connect via ethernet
+   - On a separate Ubuntu system (WLSL2 on Windows 10/11 is compatible. [Refer to installation guide](https://learn.microsoft.com/en-us/windows/wsl/install)), ensure ssh_client is installed
+2. Ensure the LattePanda is turned on.
+3. On the separate Ubuntu system, enter the following command: ```ssh -X admin@192.168.1.250```
+   - The ```-X``` allows X forwarding to occur between the connected systems so that GUI applications from the LattePanda can run on the ssh client.
+   - The ```admin@192.168.1.250``` is referring to the user account being logged into, and the ip address of the device. Note that this IP is static for ethernet connections and non-DHCP wireless connections.
+#### Steps from this point on are not required and are only necessary if planning on testing device using wifi.
+4. Connect the LattePanda to wifi via SSH
+   - Turn on wi-fi using ```nmcli r wifi on```
+   - Check that your wireless network of choice is visible to the device using ```nmcli d wifi list```
+   - Connect to your network of choice using ```sudo nmcli d wifi connect my_wifi password <password>``` 
 #### [Refer to offical guide for more information](https://ubuntu.com/core/docs/networkmanager/configure-wifi-connections)
+5. Find IP address of device on wifi network
+   - Use the ```ifconfig``` command to find the ip address of the device on the network using the wlan0 interface. It will be listed as "inet addr".
+7. Sign out of device using ```exit``` and disconnect ethernet cable from device 
+8. Repeat command on step 3 with new ip address
 ## SETUP FOR CONFIGURED DEVICE
 - Arduino sketch is found at '~/Capstone/Firmware/Arduino'
 - Open it using the arduino IDE installed on the system by using ```arduino```
