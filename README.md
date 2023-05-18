@@ -27,7 +27,12 @@ This is the preferred method of interfacing with the SAAS firmware. Setting up a
 ### 2. Ensure the LattePanda is turned on.
 ### 3. On the separate Ubuntu system, enter the following command: ```ssh -X admin@192.168.1.250```
 #### - The ```-X``` allows X forwarding to occur between the connected systems so that GUI applications from the LattePanda can run on the ssh client.
-#### - The ```admin@192.168.1.250``` is referring to the user account being logged into, and the ip address of the device. Note that this IP is static for ethernet connections and non-DHCP wireless connections. This is why it is advised to first connect the LattePanda to an ethernet
+#### - The ```admin@192.168.1.250``` is referring to the user account being logged into, and the ip address of the device. Note that this IP is static for ethernet connections and non-DHCP wireless connections.
+### 4. Connect the LattePanda to wifi via SSH
+#### - Turn on wi-fi using ```nmcli r wifi on```
+#### - Check that your wireless network of choice is visible to the device using ```nmcli d wifi list```
+#### - Connect to your network of choice using ```nmcli d wifi connect my_wifi password <password>``` 
+#### [Refer to offical guide for more information](https://ubuntu.com/core/docs/networkmanager/configure-wifi-connections)
 ## SETUP FOR CONFIGURED DEVICE
 - Arduino sketch is found at '~/Capstone/Firmware/Arduino'
 - Open it using the arduino IDE installed on the system by using ```arduino```
