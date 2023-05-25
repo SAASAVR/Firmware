@@ -15,13 +15,15 @@ This is the easiest way to interface with the SAAS firmware, as it allows for fu
 Some issues may arise using this method however, as there seems to be a problem with graphical elements creating trails when moving around the screen. 
 This can make configuration difficult.
 #### Steps:
-1. Connect the Lattepanda to your network. If using Wifi ensure that any devices being used to host other components are publically visible on the network.
-2. 
+1. Connect the Lattepanda to a monitor via the HDMI port on the board.
+2. Start the device. A login screen should appear.
+   - Log in to the admin account using password ```admin```
+4. Connect the Lattepanda to your network. If using Wifi ensure that any devices being used to host other components are publically visible on the network.
+5. Open a terminal and navigate to ```cd ~/Capstone/Firmware/Server```
+6. Do all your funky dunky stuff 
 
 ### 2. Connecting to the LattePanda via SSH
-This is the preferred method of interfacing with the SAAS firmware. Setting up an SSH server on the Lattepanda will allow any other device on the same network to connect to it via this method if it's IP address is known.
-
-## NETWORK SETUP
+This is the preferred method of interfacing with the SAAS firmware. Setting up an SSH server on the Lattepanda will allow any other device on the same network to connect to it via this method if it's IP address is known. 
 1. Connect via ethernet
    - On a separate Ubuntu system (WLSL2 on Windows 10/11 is compatible. [Refer to installation guide](https://learn.microsoft.com/en-us/windows/wsl/install)), ensure ssh_client is installed
 2. Ensure the LattePanda is turned on.
@@ -38,8 +40,13 @@ This is the preferred method of interfacing with the SAAS firmware. Setting up a
    - Use the ```ifconfig``` command to find the ip address of the device on the network using the wlan0 interface. It will be listed as "inet addr".
 7. Sign out of device using ```exit``` and disconnect ethernet cable from device 
 8. Repeat command on step 3 with new ip address
-## SETUP FOR CONFIGURED DEVICE
+### RUNNING SYSTEM
+1. ```cd ~/Capstone/Firmware/Server && python app.py```
+2. On another system connecred to the same network, run the ML and UI (documentation found in respective repositories)
+## EDITING AND RE-COMPILING ARDUINO SCRIPT
 - Arduino sketch is found at '~/Capstone/Firmware/Arduino'
 - Open it using the arduino IDE installed on the system by using ```arduino```
 - Compile and download to Arduino (if not on port /dev/ttyAM0, try port /dev/ttyAM1)
+
+
 
