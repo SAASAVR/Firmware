@@ -51,7 +51,7 @@ This is the preferred method of interfacing with the SAAS firmware. Setting up a
 - Ensure that the IDE is set to compile for an Arduino Leonardo
 - Compile and download to Arduino (if not on port /dev/ttyAM0, try port /dev/ttyAM1)
 
-## Connecting to hardware
+## CONNECTING TO HARDWARE
 - The following image is a pin diagram of the Lattepanda.
 - The GND and Vdd pins of the MX9814 microphone should go to GND and 5V pins on the Lattepanda, respectively.
    - The Gain pin on the microphone should also be connected to one of the 5V pins on the Lattepanda.
