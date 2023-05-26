@@ -40,7 +40,8 @@ This is the preferred method of interfacing with the SAAS firmware. Setting up a
    - Use the ```ifconfig``` command to find the ip address of the device on the network using the wlan0 interface. It will be listed as "inet addr".
 7. Sign out of device using ```exit``` and disconnect ethernet cable from device 
 8. Repeat command on step 3 with new ip address
-### RUNNING SYSTEM
+## RUNNING SYSTEM
+### Before running the system, please ensure that MX
 1. ```cd ~/Capstone/Firmware/Server && python app.py```
 2. On another system connecred to the same network, run the ML and UI (documentation found in respective repositories)
 ## EDITING AND RE-COMPILING ARDUINO SCRIPT
