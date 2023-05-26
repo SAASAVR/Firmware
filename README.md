@@ -42,7 +42,7 @@ This is the preferred method of interfacing with the SAAS firmware. Setting up a
 8. Repeat command on step 3 with new ip address
 ## RUNNING SYSTEM
 ### Before running the system, please ensure that the MAX9814 microphone is properly connected the the Arduino pins of the Lattepanda.
-- A pin diagram with instructions is [shown below](#Connecting the hardware)
+- A pin diagram with instructions is [shown below](## Connecting to hardware)
 1. ```cd ~/Capstone/Firmware/Server && python app.py```
 2. On another system connecred to the same network, run the ML and UI (documentation found in respective repositories)
 ## EDITING AND RE-COMPILING ARDUINO SCRIPT
@@ -51,7 +51,7 @@ This is the preferred method of interfacing with the SAAS firmware. Setting up a
 - Ensure that the IDE is set to compile for an Arduino Leonardo
 - Compile and download to Arduino (if not on port /dev/ttyAM0, try port /dev/ttyAM1)
 
-##Connecting to hardware
+## Connecting to hardware
 - The following image is a pin diagram of the Lattepanda.
 - The GND and Vdd pins of the MX9814 microphone should go to GND and 5V pins on the Lattepanda, respectively.
    - The Gain pin on the microphone should also be connected to one of the 5V pins on the Lattepanda.
