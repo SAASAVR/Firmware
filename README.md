@@ -42,7 +42,7 @@ This is the preferred method of interfacing with the SAAS firmware. Setting up a
 8. Repeat command on step 3 with new ip address
 ## RUNNING SYSTEM
 ### Before running the system, please ensure that the MAX9814 microphone is properly connected the the Arduino pins of the Lattepanda.
-- A pin diagram with instructions is [shown below](## Connecting to hardware)
+- A pin diagram with instructions is [shown below](#connecting-to-hardware)
 1. ```cd ~/Capstone/Firmware/Server && python app.py```
 2. On another system connecred to the same network, run the ML and UI (documentation found in respective repositories)
 ## EDITING AND RE-COMPILING ARDUINO SCRIPT
