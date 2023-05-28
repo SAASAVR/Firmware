@@ -23,7 +23,7 @@
 
 
 #define SAMPLES 128             //SAMPLES-pt FFT. Must   be a base 2 number. Max 128 for Arduino Uno.
-#define SAMPLING_FREQUENCY 2048   //Ts = Based on Nyquist, must be 2 times the highest expected frequency.
+#define SAMPLING_FREQUENCY 2000   //Ts = Based on Nyquist, must be 2 times the highest expected frequency.
 
 unsigned int samplingPeriod;
 unsigned long microSeconds;
@@ -33,7 +33,7 @@ double value;
 
 void   setup()
 {
-  Serial.begin(115200); //Baud rate for the Serial Monitor
+  Serial.begin(921600); //Baud rate for the Serial Monitor
   samplingPeriod = round(1000000 * (1.0 / SAMPLING_FREQUENCY)); //Period in microseconds
 }
 
@@ -41,7 +41,7 @@ void loop()
 {
     value =  analogRead(0); //Reads the value from analog pin   0 (A0), quantize it and save it as a real term.
     Serial.println(value);
-    delay(1);
+    //delay(1000/(SAMPLING_FREQUENCY));
 
 }
 
