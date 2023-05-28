@@ -43,10 +43,12 @@ This is the preferred method of interfacing with the SAAS firmware. Setting up a
 ## RUNNING SYSTEM
 ### Before running the system, please ensure that the MAX9814 microphone is properly connected the the Arduino pins of the Lattepanda.
 - A pin diagram with instructions is [shown below](#connecting-to-hardware)
+- NOTE: The other scripts (Machine learning, socket server, web-application) *MUST* be running first
 1. Navigate to the Client directory ```cd ~/Capstone/Firmware/Client```
 2. In line 235 of app.py, change the IP address in the ```SOCKETIO.connect()``` method to the IP address of your socket server.
-3. ```python app.py```
-4. On another system connecred to the same network, run the ML and UI (documentation found in respective repositories)
+   ![Lattepanda_ipAddress](https://github.com/SAASAVR/Firmware/assets/59613613/91b6d942-980f-4653-b9fe-739626d35daa)
+4. Run the script with ```python app.py```
+5. On another system connected to the same network, run the ML and UI (documentation found in respective repositories)
 ## EDITING AND RE-COMPILING ARDUINO SCRIPT
 - Arduino sketch is found at '~/Capstone/Firmware/Arduino'
 - Open it using the arduino IDE installed on the system by using ```arduino```
