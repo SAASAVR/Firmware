@@ -4,6 +4,7 @@ import numpy as np
 import socketio
 from datetime import datetime
 import io
+from os import remove
 import matplotlib.pyplot as plt
 from scipy.io.wavfile import write
 import time
@@ -212,25 +213,26 @@ def saveFile(audioWaveform,sps):
     write(filename, sps, waveform_scaled)
     insertAudio(id, filename, sps)
     print("File saved")
+    remove(filename)
     FILE_ARRAY = []
     SOCKETIO.emit("SAAS-file-saved")
 
 def NormalizeAudio(audioWaveform):
+    """Normalize audio waveform"""
+    transformedSamples = []
     npAudioWaveform = np.array(audioWaveform)
     npAudioWaveform = npAudioWaveform.astype(np.float16)
-    
-    meanVal = sum(npAudioWaveform)/len(npAudioWaveform)
-    npAudioWaveform = np.clip(npAudioWaveform, 0, 255)
+    if len(npAudioWaveform) > 0:
+        meanVal = sum(npAudioWaveform)/len(npAudioWaveform)
+        npAudioWaveform = np.clip(npAudioWaveform, 0, 255)
 
-    transformedSamples = [(x - meanVal)/meanVal for x in npAudioWaveform]
-
-    # Clip values between -30 to 30
+        transformedSamples = [(x - meanVal)/meanVal for x in npAudioWaveform]
     return transformedSamples
 
 
 if __name__ == '__main__':
     print("Connecting...")
-    SOCKETIO.connect('http://192.168.186.208:5000', wait=True)
+    SOCKETIO.connect('http://192.168.23.208:5000', wait=True)
     print("Connected...")
     SOCKETIO.emit("SAAS-connect")
     time.sleep(1)
