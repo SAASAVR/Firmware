@@ -48,7 +48,7 @@ This is the preferred method of interfacing with the SAAS firmware. Setting up a
 2. In line 235 of app.py, change the IP address in the ```SOCKETIO.connect()``` method to the IP address of your socket server.
    ![Lattepanda_ipAddress](https://github.com/SAASAVR/Firmware/assets/59613613/91b6d942-980f-4653-b9fe-739626d35daa)
 4. Run the script with ```python app.py```
-5. On another system connected to the same network, run the ML and UI (documentation found in respective repositories)
+   - If an error is returned, make sure the socket server is running and it's host machine's IP address is being connected to (Refer to step 2)
 ## EDITING AND RE-COMPILING ARDUINO SCRIPT
 - Arduino sketch is found at '~/Capstone/Firmware/Arduino'
 - Open it using the arduino IDE installed on the system by using ```arduino```
