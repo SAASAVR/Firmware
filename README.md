@@ -24,6 +24,7 @@ This can make configuration difficult.
 
 ### 2. Connecting to the LattePanda via SSH
 This is the preferred method of interfacing with the SAAS firmware. Setting up an SSH server on the Lattepanda will allow any other device on the same network to connect to it via this method if it's IP address is known. 
+**NOTE:** When editing code it's recommended to connect to the Latte Panda using Visual Studio Code. A guide [can be found here](https://code.visualstudio.com/docs/remote/ssh).
 1. Connect via ethernet
    - On a separate Ubuntu system (WLSL2 on Windows 10/11 is compatible. [Refer to installation guide](https://learn.microsoft.com/en-us/windows/wsl/install)), ensure ssh_client is installed
 2. Ensure the LattePanda is turned on.
