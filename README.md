@@ -1,5 +1,5 @@
 # Sensor-Activated Acoustic Signal acquisition, visualization, and recognition (SAAS)
-The SAAS system contains three main components (Hardware, firmware, software). This repository focuses on the firmware component.
+The SAAS system contains three main components (Hardware, firmware, software). This document=focuses on the firmware component.
 Within the firmware, there are two sub-systems.
 - Arduino sketch (C++)
 - Client (Python 3.8.10 on an Ubuntu 16.4 OS)
