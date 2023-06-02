@@ -63,7 +63,7 @@ This can make configuration difficult.
 - The current repository already exists on the Lattepanda under ```~/Capstone```. 
 - In order to push any changes to the repository, ssh credentials will need to be generated. ([Refer to this guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent))
 - The ssh credentials will then need to be added to your account. ([Refer to this guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent))
-# NOTE: Currently, the repository on the device and the repository on GitHub are identical (save for the README), so if a deletion and re-clone of the repository is needed for initial setup, it wil not lead to any loss of data.
+### NOTE: Currently, the repository on the device and the repository on GitHub are identical (save for the README), so if a deletion and re-clone of the repository is needed for initial setup, it wil not lead to any loss of data.
 
 ## CONNECTING TO HARDWARE
 - The following image is a pin diagram of the Lattepanda.
