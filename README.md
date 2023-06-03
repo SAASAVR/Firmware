@@ -14,6 +14,13 @@ Within the firmware, there are two sub-systems.
 The Lattepanda is currently running Ubuntu Desktop 16.4. There are multiple ways to interface with it, each with their own advantages and disadvantages.
 Please note that any method will require a login. ***The default admin user can be accessed with the password 'admin'.***
 
+### Prerequisites (should already be installed):
+- sudo apt-get install liblzma-dev 
+- sudo apt-get install lzma
+- sudo apt-get install tk-dev
+- sudo apt-get install arduino
+
+
 ### 1. Connecting to the LattePanda via SSH
 This is the preferred method of interfacing with the SAAS firmware. Setting up an SSH server on the Lattepanda will allow any other device on the same network to connect to it via this method if it's IP address is known. 
 **NOTE:** When editing code it's recommended to connect to the Latte Panda using Visual Studio Code. A guide [can be found here](https://code.visualstudio.com/docs/remote/ssh).
